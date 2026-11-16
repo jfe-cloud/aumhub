@@ -4,7 +4,16 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Users, Settings, Shield, Activity, Menu } from 'lucide-react';
+import {
+  Users,
+  Settings,
+  Shield,
+  Activity,
+  Menu,
+  Inbox,
+  FlaskConical,
+  BookOpen
+} from 'lucide-react';
 
 export default function DashboardLayout({
   children
@@ -15,6 +24,9 @@ export default function DashboardLayout({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const navItems = [
+    { href: '/dashboard/aum', icon: Inbox, label: 'AUM Inbox' },
+    { href: '/dashboard/aum/simulator', icon: FlaskConical, label: 'Simulator' },
+    { href: '/dashboard/aum/api', icon: BookOpen, label: 'AUM API' },
     { href: '/dashboard', icon: Users, label: 'Team' },
     { href: '/dashboard/general', icon: Settings, label: 'General' },
     { href: '/dashboard/activity', icon: Activity, label: 'Activity' },
@@ -48,12 +60,21 @@ export default function DashboardLayout({
           }`}
         >
           <nav className="h-full overflow-y-auto p-4">
-            {navItems.map((item) => (
+            {navItems.map((item) => {
+              const active =
+                item.href === '/dashboard'
+                  ? pathname === '/dashboard'
+                  : pathname === item.href ||
+                    (item.href !== '/dashboard/aum' &&
+                      pathname.startsWith(item.href + '/')) ||
+                    (item.href === '/dashboard/aum' &&
+                      pathname === '/dashboard/aum');
+              return (
               <Link key={item.href} href={item.href} passHref>
                 <Button
-                  variant={pathname === item.href ? 'secondary' : 'ghost'}
+                  variant={active ? 'secondary' : 'ghost'}
                   className={`shadow-none my-1 w-full justify-start ${
-                    pathname === item.href ? 'bg-gray-100' : ''
+                    active ? 'bg-gray-100' : ''
                   }`}
                   onClick={() => setIsSidebarOpen(false)}
                 >
@@ -61,7 +82,8 @@ export default function DashboardLayout({
                   {item.label}
                 </Button>
               </Link>
-            ))}
+            );
+            })}
           </nav>
         </aside>
 

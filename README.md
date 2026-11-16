@@ -84,11 +84,31 @@ GET/POST https://sdx-aum-apim-t.azure-api.net/vnb/messages/consume[?peekOnly][&c
 
 ### Get Next
 
-Pulls the **next** pending VNB message (single-item counterpart to batch consume). Detailed request/response shapes will be documented in [docs/api.md](docs/api.md) when fully captured from APIM.
+```
+GET /api/vnb/messages/next
+```
+
+Returns the **head** of the queue **without deleting** it (`DownloadMessage`).
+
+- `200` — message body
+- `204` — queue empty
+- `401` — invalid subscription
 
 ### Confirm Receipt
 
-Acknowledges processed transfers after consume/get. Detailed request/response shapes will be documented in [docs/api.md](docs/api.md) when fully captured from APIM.
+```
+DELETE /api/vnb/messages/{transferId}
+```
+
+Confirms receipt of the message and **removes it** from the queue. Messages must be confirmed **in order** (must match the current head).
+
+- `204` — removed
+- `400` — invalid id or not the current head
+- `401` — invalid subscription
+- `404` — message not available
+- `422` — unprocessable
+
+Full reference: [docs/api.md](docs/api.md).
 
 ### Message types (`messageTypeCode`)
 
@@ -156,20 +176,17 @@ AUM Hub does **not** claim live connectivity to production APIM. It provides a c
 
 ---
 
-## Planned Application Areas
+## Application Areas
 
-Routes below are **planned**, not yet implemented as AUM product surfaces.
+| Area | Route | Intent |
+|------|-------|--------|
+| Inbox | `/dashboard/aum` | List seeded / pending / removed transfers |
+| Detail | `/dashboard/aum/[transferId]` | Payload + evidence timeline |
+| Simulator | `/dashboard/aum/simulator` | Seed MoveIn / MoveOut (and custom JSON) |
+| API docs | `/dashboard/aum/api` | Curl how-to for VNB ops |
+| VNB API | `/api/vnb/messages/...` | Get Next, Consume Batch, Confirm Receipt |
 
-| Area | Intent |
-|------|--------|
-| Inbox | List and open received / seeded AUM transfers |
-| Simulator | Seed MoveIn / MoveOut / Update / Cancellation / PreInfo scenarios |
-| Consume / Peek playground | Exercise Get Next and Consume Batch (`peekOnly`, `count`) |
-| Confirm Receipt | Acknowledge processed transfers |
-| Configuration | Test credentials, queue behaviour, outbound targets |
-| API docs | Mirror AUM VNB (v0) for integrators |
-
-Starter SaaS routes from the Next.js template (auth, team, pricing) remain as plumbing until the AUM UI replaces them.
+Starter SaaS routes (auth, team, pricing) remain as plumbing.
 
 ---
 
@@ -207,6 +224,7 @@ STRIPE_SECRET_KEY=sk_test_…
 STRIPE_WEBHOOK_SECRET=whsec_…
 BASE_URL=http://localhost:3000
 AUTH_SECRET=…   # e.g. openssl rand -base64 32
+AUM_VNB_SUBSCRIPTION_KEY=…   # test key for Ocp-Apim-Subscription-Key
 ```
 
 Apply schema and optional seed:
@@ -241,12 +259,10 @@ stripe listen --forward-to localhost:3000/api/stripe/webhook
 
 | Document | Status | Description |
 |----------|--------|-------------|
-| [README.md](README.md) | Normative charter | Product positioning and cornerstones |
-| [docs/domain.md](docs/domain.md) | Planned | Domain model |
-| [docs/api.md](docs/api.md) | Planned | Full `DownloadMessageSet` catalog + Get Next / Confirm Receipt details |
-| [docs/architecture.md](docs/architecture.md) | Planned | Technical architecture |
-
-These documents will be normative once added.
+| [README.md](README.md) | Normative | Product positioning and cornerstones |
+| [docs/domain.md](docs/domain.md) | Normative | Domain model |
+| [docs/api.md](docs/api.md) | Normative | VNB + simulator API reference |
+| [docs/architecture.md](docs/architecture.md) | Normative | Technical architecture |
 
 ---
 

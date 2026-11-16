@@ -5,6 +5,7 @@ import {
   text,
   timestamp,
   integer,
+  jsonb,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
@@ -112,6 +113,27 @@ export const activityLogsRelations = relations(activityLogs, ({ one }) => ({
   }),
 }));
 
+export const aumMessages = pgTable('aum_messages', {
+  id: serial('id').primaryKey(),
+  transferId: varchar('transfer_id', { length: 100 }).notNull().unique(),
+  messageTypeCode: integer('message_type_code').notNull(),
+  messageType: varchar('message_type', { length: 50 }).notNull(),
+  payload: jsonb('payload').notNull(),
+  status: varchar('status', { length: 20 }).notNull().default('pending'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  removedAt: timestamp('removed_at'),
+  removedBy: varchar('removed_by', { length: 20 }),
+});
+
+export const aumEvents = pgTable('aum_events', {
+  id: serial('id').primaryKey(),
+  action: varchar('action', { length: 40 }).notNull(),
+  transferId: varchar('transfer_id', { length: 100 }),
+  statusCode: integer('status_code'),
+  meta: jsonb('meta'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Team = typeof teams.$inferSelect;
@@ -122,6 +144,10 @@ export type ActivityLog = typeof activityLogs.$inferSelect;
 export type NewActivityLog = typeof activityLogs.$inferInsert;
 export type Invitation = typeof invitations.$inferSelect;
 export type NewInvitation = typeof invitations.$inferInsert;
+export type AumMessage = typeof aumMessages.$inferSelect;
+export type NewAumMessage = typeof aumMessages.$inferInsert;
+export type AumEvent = typeof aumEvents.$inferSelect;
+export type NewAumEvent = typeof aumEvents.$inferInsert;
 export type TeamDataWithMembers = Team & {
   teamMembers: (TeamMember & {
     user: Pick<User, 'id' | 'name' | 'email'>;
